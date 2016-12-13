@@ -1,3 +1,20 @@
+# Updates
+
+add Chinese post title support 
+增加新建中文标题博客支持
+
+## Requirement
+
+You need to install `python` and `pypinyin`
+
+运行此插件需要python环境, 如果没有的话是无法正常工作的；另外还需要`pypinyin`三方库，作用是将汉字转成拼音
+
+### How to install `pypinyin`
+
+```
+pip install pypinyin
+```
+
 # jekyll.vim
 
 Blogging from the command line should not be tedious.
