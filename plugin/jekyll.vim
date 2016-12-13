@@ -87,9 +87,13 @@ endfunction
 function! s:dasherize(string)
     let string = tolower(a:string)
     " 增加了中文支持
-    let string = s:rename_chinese_to_pinyin(string)
-    " let string = s:gsub(string, '([^a-z0-9\u4e00-\u9fa5_a-zA-Z0-9])+', '-')
-    " let string = s:gsub(string, '(^-*|-*$)', '')
+    "
+    if s:check_python_env()
+        let string = s:rename_chinese_to_pinyin(string)
+    else 
+        let string = s:gsub(string, '([^a-zA-Z0-9])+', '-')
+        let string = s:gsub(string, '(^-*|-*$)', '')
+    endif
     return string
 endfunction
 
@@ -309,11 +313,23 @@ augroup END
 
 " vim:ft=vim:fdm=marker:ts=2:sw=2:sts=2:et
 
-
-if !has("python")
-    echo "错误: 此插件需要python运行环境"
-    finish
-endif
+function! s:check_python_env()
+    let result = 1
+    if !has("python")
+        let result = 0
+        return result
+    endif
+python << EOF
+import imp
+import vim
+try:
+    imp.find_module('pypinyin')
+    vim.command("let result='%d'"%True)
+except :
+    vim.command("let result='%d'" % False)
+EOF
+return result
+endfunction
 
 function! s:rename_chinese_to_pinyin(name)
 python << EOF
@@ -321,20 +337,14 @@ python << EOF
 import vim
 from pypinyin import lazy_pinyin
 
-" 从方法中取出参数，要使用a:name
-" 
 args = vim.eval('a:name')
 
-" 编码成utf-8格式
-" 
 args = unicode(args, 'utf-8')
 namearr = []
 # for arg in args:
 #    namearr.append(unicode(arg, 'utf-8'))
 # print namearr
 # namestr = ' '.join(namearr)
-" 字符串转成拼音
-" 
 newnames=lazy_pinyin(args)
 
 for i, component in enumerate(newnames):
@@ -343,8 +353,6 @@ for i, component in enumerate(newnames):
 newnamestr="-".join(newnames)
 newnamestr=newnamestr.replace(" ", "-")
 
-" 将结果赋值给vim变量result
-" 
 vim.command("let result = '%s'"% newnamestr)
 EOF
 return result
